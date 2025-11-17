@@ -1,0 +1,311 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Notes App (New Theme)</title>
+
+  <!-- Google Font -->
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600&display=swap" rel="stylesheet">
+
+  <style>
+    body {
+      font-family: 'Poppins', sans-serif;
+      margin: 0;
+      background: linear-gradient(to right, #c9d6ff, #e2e2e2);
+    }
+
+    h2 {
+      text-align: center;
+      padding: 15px;
+      font-size: 28px;
+      font-weight: 600;
+    }
+
+    #container {
+      display: flex;
+      padding: 20px;
+      gap: 25px;
+    }
+
+    #sidebar {
+      width: 220px;
+      background: rgba(255, 255, 255, 0.8);
+      padding: 15px;
+      border-radius: 12px;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+    }
+
+    #notesArea {
+      flex: 1;
+      background: rgba(255,255,255,0.8);
+      padding: 20px;
+      border-radius: 12px;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+    }
+
+    .noteCard {
+      background: white;
+      border-radius: 10px;
+      padding: 15px;
+      margin-bottom: 15px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
+
+    .btn {
+      padding: 8px 16px;
+      background: #0066ff;
+      color: white;
+      border: none;
+      cursor: pointer;
+      border-radius: 6px;
+      font-size: 14px;
+    }
+
+    .btn:hover {
+      background: #004ecc;
+    }
+
+    input, textarea, select {
+      width: 100%;
+      padding: 10px;
+      border-radius: 6px;
+      border: 1px solid #bbb;
+      margin-top: 6px;
+      margin-bottom: 12px;
+      font-size: 14px;
+      box-sizing: border-box;
+    }
+
+    #modal {
+      position: fixed;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
+      display: none;
+      justify-content: center;
+      align-items: center;
+      background: rgba(0,0,0,0.4);
+    }
+
+    #modalBox {
+      background: white;
+      padding: 25px;
+      width: 340px;
+      border-radius: 12px;
+      box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+    }
+
+    .badge {
+      background: #ffe28a;
+      padding: 3px 7px;
+      font-size: 12px;
+      border-radius: 4px;
+      margin-left: 6px;
+    }
+
+    .meta {
+      font-size: 12px;
+      color: #666;
+      margin-top: 5px;
+    }
+  </style>
+</head>
+<body>
+
+<h2>Notes App (New Theme)</h2>
+
+<div id="container">
+
+  <div id="sidebar">
+    <h3>Categories</h3>
+    <button class="btn" style="width:100%; margin-bottom:10px;" onclick="openModal()">+ Add Note</button>
+    <button class="btn" style="width:100%; margin-bottom:5px;" onclick="showCategory('All')">All Notes</button>
+    <button class="btn" style="width:100%; margin-bottom:5px;" onclick="showCategory('Work')">Work</button>
+    <button class="btn" style="width:100%; margin-bottom:5px;" onclick="showCategory('Personal')">Personal</button>
+    <button class="btn" style="width:100%;" onclick="showCategory('Other')">Other</button>
+  </div>
+
+  <div id="notesArea">
+    <h3 id="heading">All Notes</h3>
+    <div id="notesList"></div>
+  </div>
+
+</div>
+
+<!-- Modal -->
+<div id="modal">
+  <div id="modalBox">
+    <h3 id="modalTitle">Add Note</h3>
+
+    <input type="hidden" id="editId">
+
+    <label>Title</label>
+    <input type="text" id="noteTitle" placeholder="Enter title">
+
+    <label>Description</label>
+    <textarea id="noteDesc" placeholder="Enter description"></textarea>
+
+    <label>Category</label>
+    <select id="noteCat">
+      <option>Work</option>
+      <option>Personal</option>
+      <option>Other</option>
+    </select>
+
+    <div style="text-align:right;">
+      <button class="btn" onclick="saveNote()">Save</button>
+      <button class="btn" style="background:gray;" onclick="closeModal()">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<script>
+  let notes = JSON.parse(localStorage.getItem("notesDataNew")) || [];
+  let currentCategory = "All";
+
+  function saveToLocal() {
+    localStorage.setItem("notesDataNew", JSON.stringify(notes));
+  }
+
+  function getBaseTitle(title) {
+    return title.replace(/\s\(\d+\)$/, "");
+  }
+
+  function openModal() {
+    document.getElementById("modal").style.display = "flex";
+    document.getElementById("modalTitle").innerText = "Add Note";
+    document.getElementById("editId").value = "";
+    document.getElementById("noteTitle").value = "";
+    document.getElementById("noteDesc").value = "";
+    document.getElementById("noteCat").value = "Work";
+  }
+
+  function closeModal() {
+    document.getElementById("modal").style.display = "none";
+  }
+
+  function saveNote() {
+    let title = document.getElementById("noteTitle").value.trim();
+    let desc = document.getElementById("noteDesc").value.trim();
+    let cat = document.getElementById("noteCat").value;
+    let editId = document.getElementById("editId").value;
+
+    if (!title || !desc) {
+      alert("Please fill all fields.");
+      return;
+    }
+
+    if (editId) {
+      editId = Number(editId);
+      let note = notes.find(n => n.id === editId);
+      if (note) {
+        note.title = title;
+        note.desc = desc;
+        note.category = cat;
+        note.date = new Date().toLocaleString();
+      }
+    } else {
+      notes.push({
+        id: Date.now(),
+        title,
+        desc,
+        category: cat,
+        date: new Date().toLocaleString()
+      });
+    }
+
+    saveToLocal();
+    closeModal();
+    displayNotes(currentCategory);
+  }
+
+  function deleteNote(id) {
+    if (confirm("Delete this note?")) {
+      notes = notes.filter(n => n.id !== id);
+      saveToLocal();
+      displayNotes(currentCategory);
+    }
+  }
+
+  function editNote(id) {
+    let note = notes.find(n => n.id === id);
+    if (!note) return;
+
+    openModal();
+    document.getElementById("modalTitle").innerText = "Edit Note";
+    document.getElementById("editId").value = id;
+    document.getElementById("noteTitle").value = note.title;
+    document.getElementById("noteDesc").value = note.desc;
+    document.getElementById("noteCat").value = note.category;
+  }
+
+  function displayNotes(cat) {
+    currentCategory = cat;
+    let list = document.getElementById("notesList");
+    list.innerHTML = "";
+
+    let filtered = (cat === "All") ? notes : notes.filter(n => n.category === cat);
+
+    document.getElementById("heading").innerText = cat + " Notes";
+
+    let baseCounts = {};
+    filtered.forEach(n => {
+      let base = getBaseTitle(n.title);
+      baseCounts[base] = (baseCounts[base] || 0) + 1;
+    });
+
+    filtered.forEach(n => {
+      let base = getBaseTitle(n.title);
+      let isDuplicate = baseCounts[base] > 1;
+
+      let card = document.createElement("div");
+      card.className = "noteCard";
+
+      let title = document.createElement("div");
+      title.innerHTML = "<strong>" + escapeHtml(n.title) + "</strong>" +
+        (isDuplicate ? " <span class='badge'>Duplicate</span>" : "");
+      card.appendChild(title);
+
+      let desc = document.createElement("div");
+      desc.innerText = n.desc;
+      card.appendChild(desc);
+
+      let meta = document.createElement("div");
+      meta.className = "meta";
+      meta.innerText = "Category: " + n.category + " | " + n.date;
+      card.appendChild(meta);
+
+      let btn1 = document.createElement("button");
+      btn1.className = "btn";
+      btn1.innerText = "Edit";
+      btn1.onclick = () => editNote(n.id);
+      card.appendChild(btn1);
+
+      let btn2 = document.createElement("button");
+      btn2.className = "btn";
+      btn2.style.background = "red";
+      btn2.innerText = "Delete";
+      btn2.onclick = () => deleteNote(n.id);
+      card.appendChild(btn2);
+
+      list.appendChild(card);
+    });
+
+    if (filtered.length === 0) {
+      list.innerHTML = "<p>No notes found.</p>";
+    }
+  }
+
+  function showCategory(cat) {
+    displayNotes(cat);
+  }
+
+  function escapeHtml(text) {
+    return text.replace(/[&<>"']/g, m => ({
+      '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'
+    }[m]));
+  }
+
+  displayNotes("All");
+</script>
+
+</body>
+</html>
